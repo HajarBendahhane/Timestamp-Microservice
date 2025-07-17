@@ -5,6 +5,10 @@ var cors = require('cors');
 app.use(cors({optionsSuccessStatus: 200}));  
 app.use(express.static('public'));
 
+// Additional Function
+
+const isInvalid=(date)=> date.toUTCString() === "Invalid Date";
+
 // Routes 
 app.get("/", function (req, res) {
   res.sendFile(__dirname + '/views/index.html');
@@ -14,29 +18,21 @@ app.get('/api',function(req,res){
   var now = new Date();
   res.json({"unix":now.getTime(),"utc":now.toUTCString()});
 });
-app.get('/api/:date?',function(req,res){
-  var input = req.params.date;
-  if(!input){
-    var now = new Date();
-    res.json({"unix":now.getTime(),"utc":now.toUTCString()});
+app.get('/api/:date',function(req,res){
+  var date = new Date(req.params.date);
+  if(isInvalid(date)){
+    date = new Date(+req.params.date);
   }
-  else{
-    if(!isNaN(input)){
-    var date=new Date(Number(input));
-    res.json({"unix":Number(input),"utc":date.toUTCString()});
+  if(isInvalid(date)){
+    res.json({error:"Invalid Date"});
   }
-  else{
-    var date=new Date(input);
-    if(!isNaN(date.getTime())){
-    res.json({"unix":date.getTime(),"utc":date.toUTCString()});}
-    else {res.json({error:"Invalid Date"});}
-  }} 
+  res.json({"unix":date.getTime(),"utc":date.toUTCString()});
 });
 
 app.get("/api/hello", function (req, res) {
   res.json({greeting: 'hello API'});
 });
-// Routes
+// End Routes
 var listener = app.listen(process.env.PORT || 3000, function () {
   console.log('Your app is listening on port ' + listener.address().port);
 });
